@@ -1,0 +1,3 @@
+*.pyc
+omero_web_zarr.egg-info/*
+.DS_Store
