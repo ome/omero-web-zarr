@@ -12,6 +12,8 @@ Config:
 
     $ omero config append omero.web.apps '"omero_web_zarr"'
 
+    $ omero config append omero.web.open_with '["web_zarr_vizarr", "omero_web_zarr_index", {"supported_objects":["image"], "label": "Vizarr", "script_url": "omero_web_zarr/openwith.js"}]'
+
 
 Then open an image in Vizarr:
 
