@@ -6,4 +6,5 @@ setup(
     description="OMERO.web plugin for OME-Zarr",
     packages=find_packages(),
     keywords=['omero', 'zarr', 'ome', 'web'],
+    install_requires=['zarr'],
 )
