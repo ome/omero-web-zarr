@@ -7,4 +7,5 @@ setup(
     packages=find_packages(),
     keywords=['omero', 'zarr', 'ome', 'web'],
     install_requires=['zarr'],
+    include_package_data=True,
 )
