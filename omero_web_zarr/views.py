@@ -32,6 +32,16 @@ from omero.model.enums import PixelsTypedouble
 from omeroweb.webclient.decorators import login_required
 from omeroweb.webgateway.marshal import channelMarshal
 
+PIXEL_TYPES = {
+    PixelsTypeint8: np.int8,
+    PixelsTypeuint8: np.uint8,
+    PixelsTypeint16: np.int16,
+    PixelsTypeuint16: np.uint16,
+    PixelsTypeint32: np.int32,
+    PixelsTypeuint32: np.uint32,
+    PixelsTypefloat: np.float32,
+    PixelsTypedouble: np.float64
+}
 
 @login_required()
 def index(request, conn=None, **kwargs):
@@ -119,17 +129,7 @@ def image_zarray(request, iid, level, conn=None, **kwargs):
     chunks = get_chunk_shape(image)
 
     ptype = image.getPrimaryPixels().getPixelsType().getValue()
-    pixelTypes = {
-        PixelsTypeint8: np.int8,
-        PixelsTypeuint8: np.uint8,
-        PixelsTypeint16: np.int16,
-        PixelsTypeuint16: np.uint16,
-        PixelsTypeint32: np.int32,
-        PixelsTypeuint32: np.uint32,
-        PixelsTypefloat: np.float32,
-        PixelsTypedouble: np.float64
-    }
-    np_type = pixelTypes[ptype]
+    np_type = PIXEL_TYPES[ptype]
 
     rsp = {"data": "fail"}
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -153,6 +153,8 @@ def image_chunk(request, iid, level, t, c, z, y, x, conn=None, **kwargs):
     image = conn.getObject("Image", iid)
     shape = get_image_shape(image, level)
     chunks = get_chunk_shape(image)
+    ptype = image.getPrimaryPixels().getPixelsType().getValue()
+    np_type = PIXEL_TYPES[ptype]
 
     tile_w = chunks[-1]
     tile_h = chunks[-2]
@@ -179,7 +181,7 @@ def image_chunk(request, iid, level, t, c, z, y, x, conn=None, **kwargs):
         finally:
             pix.close()
 
-        tile = np.frombuffer(tile, dtype=np.uint8)
+        tile = np.frombuffer(tile, dtype=np_type)
         plane = tile.reshape((tile_h, tile_w))
     else:
         plane = image.getPrimaryPixels().getTile(z, c, t, tile)
