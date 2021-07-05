@@ -20,6 +20,7 @@ import tempfile
 import zarr
 import os
 import json
+import requests
 
 from django.http import HttpResponse, JsonResponse
 from django.core.urlresolvers import reverse
@@ -203,4 +204,24 @@ def image_chunk(request, iid, level, t, c, z, y, x, conn=None, **kwargs):
     rsp = HttpResponse(data)
     rsp["Content-Length"] = len(data)
     rsp["Content-Disposition"] = "attachment; filename=%s" % chunk_name
+    return rsp
+
+
+def vizarr(request, url):
+    """
+    Self-host vizarr to avoit CORS issues
+
+    Delegate all requests to https://hms-dbmi.github.io/vizarr/
+    """
+
+    base_url = "https://hms-dbmi.github.io/vizarr/"
+    target_url = base_url + url
+
+    response = requests.get(target_url)
+
+    rsp = HttpResponse(response.content)
+
+    if url.endswith(".js"):
+        rsp['content-type'] = "application/javascript"
+
     return rsp
