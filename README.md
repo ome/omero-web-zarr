@@ -17,17 +17,19 @@ Config:
 
     $ omero config append omero.web.open_with '["web_zarr_vizarr", "omero_web_zarr_index", {"supported_objects":["image"], "label": "Vizarr", "script_url": "omero_web_zarr/openwith.js"}]'
 
-Then you will be able to access OMERO Images in OME-NGFF format with a URL like:
+Then you will be able to access OMERO Images in OME-NGFF format with a URLs like:
 
     # base URL for Image ID
     [omero-server]/zarr/image/[ID].zarr
 
-    # URLS for .zattrs, .zgroup, .zarray, chunks
+    # URLS for .zattrs, .zgroup
     [omero-server]/zarr/image/[ID].zarr/.zattrs
     [omero-server]/zarr/image/[ID].zarr/.zgroup
-    # array of the dataset at path '0'
+
+    # .zarray of the dataset at path '0'
     [omero-server]/zarr/image/[ID].zarr/0/.zarray
-    # 3D chunk of dataset at path '0'
+
+    # first 3D chunk of the dataset at path '0'
     [omero-server]/zarr/image/[ID].zarr/0/0/0/0
 
 
