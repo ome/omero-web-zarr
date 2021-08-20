@@ -33,7 +33,7 @@ urlpatterns = [
     url(r'^image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/.zarray$',
         views.image_zarray, name='zarr_image_zarray'),
 
-    url(r'^image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/(?P<t>[0-9]+).(?P<c>[0-9]+).(?P<z>[0-9]+).(?P<y>[0-9]+).(?P<x>[0-9]+)$',
+    url(r'^image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/(?P<chunk>[0-9/]+)$',
         views.image_chunk, name='zarr_image_chunk'),
 
     # Delegate all /vizarr/* urls to load from https://hms-dbmi.github.io/vizarr/
