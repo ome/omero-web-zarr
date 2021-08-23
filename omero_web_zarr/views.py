@@ -43,14 +43,17 @@ PIXEL_TYPES = {
     PixelsTypedouble: np.float64
 }
 
+
 @login_required()
 def index(request, conn=None, **kwargs):
     """
-    omero-web-zarr app Home page 
+    omero-web-zarr app Home page
     """
     home = request.build_absolute_uri(reverse("omero_web_zarr_index"))
     return HttpResponse(
-        "To open an Image in Vizarr go to https://hms-dbmi.github.io/vizarr/?source=%simage/[IMAGE_ID].zarr" % home
+        "To open an Image in Vizarr go to "
+        "https://hms-dbmi.github.io/vizarr/?source=%simage/[IMAGE_ID].zarr"
+        % home
     )
 
 
@@ -81,7 +84,8 @@ def image_zattrs(request, iid, conn=None, **kwargs):
             "rdefs": {
                 "defaultT": image._re.getDefaultT(),
                 "defaultZ": image._re.getDefaultZ(),
-                "model": (image.isGreyscaleRenderingModel() and "greyscale" or "color"),
+                "model": (image.isGreyscaleRenderingModel()
+                          and "greyscale" or "color"),
             }
         }
     }
@@ -102,7 +106,8 @@ def get_image_shape(image, level):
         levels = image._re.getResolutionDescriptions()
         if level >= len(levels):
             raise Exception(
-                "Level %s higher than %s levels for this image" % (level, len(levels)))
+                "Level %s higher than %s levels for this image" %
+                (level, len(levels)))
         shape[-1] = levels[level].sizeX
         shape[-2] = levels[level].sizeY
     return shape
@@ -134,7 +139,8 @@ def image_zarray(request, iid, level, conn=None, **kwargs):
     rsp = {"data": "fail"}
     with tempfile.TemporaryDirectory() as tmpdirname:
         # creates EMPTY zarray, but it's all we need to write .zarray
-        zarr.open_array(tmpdirname, mode='w', shape=shape, chunks=chunks, dtype=np_type)
+        zarr.open_array(tmpdirname, mode='w', shape=shape,
+                        chunks=chunks, dtype=np_type)
 
         # reads zarray
         zattrs_path = os.path.join(tmpdirname, '.zarray')
@@ -194,7 +200,8 @@ def image_chunk(request, iid, level, t, c, z, y, x, conn=None, **kwargs):
     data = ""
     with tempfile.TemporaryDirectory() as tmpdirname:
         # write single chunk to array of same shape
-        zarr_array = zarr.open_array(tmpdirname, mode='w', shape=chunks, chunks=chunks, dtype=plane.dtype)
+        zarr_array = zarr.open_array(tmpdirname, mode='w', shape=chunks,
+                                     chunks=chunks, dtype=plane.dtype)
         zarr_array[0, 0, 0, :, :] = plane
 
         # reads chunk
