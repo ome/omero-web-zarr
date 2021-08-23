@@ -36,6 +36,6 @@ urlpatterns = [
     url(r'^image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/(?P<chunk>[0-9/]+)$',
         views.image_chunk, name='zarr_image_chunk'),
 
-    # Delegate all /vizarr/* urls to load from https://hms-dbmi.github.io/vizarr/
+    # Delegate all /vizarr/* urls to https://hms-dbmi.github.io/vizarr/
     url(r'^vizarr/(?P<url>.*)$', views.vizarr, name='zarr_vizarr'),
 ]
