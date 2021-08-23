@@ -40,3 +40,13 @@ This omero-web app self-hosts Vizarr to avoid CORS issues (delegating to https:/
 In the webclient UI you can use the context menu to `Open With > Vizarr`, or use your Image ID and go directly to:
 
     [omero-server]/zarr/vizarr/?source=/zarr/image/[ID].zarr
+
+# Testing
+
+To run integration tests (in your omero-web conda environment above) with `pytest`.
+See [OMERO testing docs](https://docs.openmicroscopy.org/latest/omero/developers/testing.html)
+for setting `ICE_CONFIG` and dependencies etc, then:
+
+    $ export DJANGO_SETTINGS_MODULE=omeroweb.settings
+
+    $ pytest test/integration/test_ngff.py
