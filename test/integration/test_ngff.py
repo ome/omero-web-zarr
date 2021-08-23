@@ -68,8 +68,9 @@ class TestNgff(IWebTest):
         user_name = conn.getUser().getName()
         django_client = self.new_django_client(user_name, user_name)
 
-        image = self.create_test_image(session=conn.c.sf, size_x=size_x, size_y=size_y,
-                                       size_z=size_z, size_c=size_c, size_t=size_t)
+        image = self.create_test_image(
+            session=conn.c.sf, size_x=size_x, size_y=size_y,
+            size_z=size_z, size_c=size_c, size_t=size_t)
         image_id = image.id.val
 
         zattrs_url = reverse('zarr_image_zattrs', kwargs={"iid": image_id})
@@ -80,6 +81,7 @@ class TestNgff(IWebTest):
         zgroup_json = get_json(django_client, zgroup_url)
         assert zgroup_json["zarr_format"] == 2
 
-        zarray_url = reverse('zarr_image_zarray', kwargs={"iid": image_id, "level": 0})
+        zarray_url = reverse('zarr_image_zarray',
+                             kwargs={"iid": image_id, "level": 0})
         zarray_json = get_json(django_client, zarray_url)
         assert zarray_json["shape"] == [size_t, size_c, size_z, size_y, size_x]
