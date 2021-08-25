@@ -47,6 +47,4 @@ To run integration tests (in your omero-web conda environment above) with `pytes
 See [OMERO testing docs](https://docs.openmicroscopy.org/latest/omero/developers/testing.html)
 for setting `ICE_CONFIG` and dependencies etc, then:
 
-    $ export DJANGO_SETTINGS_MODULE=omeroweb.settings
-
     $ pytest test/integration/test_ngff.py
