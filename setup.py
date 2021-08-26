@@ -62,5 +62,6 @@ setup(
     keywords=['omero', 'zarr', 'ome', 'web'],
     install_requires=['zarr'],
     include_package_data=True,
-    cmdclass={'test': PyTest}
+    cmdclass={'test': PyTest},
+    tests_require=['pytest', 'ome_zarr'],
 )
