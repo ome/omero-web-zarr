@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from django.http.response import Http404
 import numpy as np
 import tempfile
 import zarr
@@ -173,10 +174,19 @@ def image_zarray(request, iid, level, conn=None, **kwargs):
 @login_required()
 def image_chunk(request, iid, level, chunk, conn=None, **kwargs):
 
+    # E.g. dims [0, 0, 0, 0, 0] for 5D image or [0, 0, 0] for 3D image
     dims = [int(dim) for dim in chunk.split("/")]
 
     image = conn.getObject("Image", iid)
+    # E.g. axes = ['t', 'c', 'z', 'y', 'x'] for 5D image or ['c', 'y', 'x']
     axes = get_axes(image)
+
+    # dims from URL must match number of axes
+    if len(dims) != len(axes):
+        raise Http404(
+            "chunk %s has incorrect number of dimensions for axes: %s" %
+            (chunk, axes))
+
     shape = get_image_shape(image, level)
     chunks = get_chunk_shape(image)
     ptype = image.getPrimaryPixels().getPixelsType().getValue()
