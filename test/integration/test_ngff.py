@@ -21,9 +21,15 @@
 
 """Integration tests for testing saving and loading figure files."""
 
-from omeroweb.testlib import IWebTest, get, get_json
+import json
+import os
 import pytest
+import zarr
 from django.core.urlresolvers import reverse
+from ome_zarr.reader import Reader
+from ome_zarr.io import parse_url
+
+from omeroweb.testlib import IWebTest, get, get_json
 from omero.gateway import BlitzGateway
 
 
@@ -56,13 +62,13 @@ class TestNgff(IWebTest):
         rsp = get(django_client, index_url)
         assert rsp is not None
 
-    def test_image_zarr(self, user1):
+    def test_image_zarr(self, user1, tmpdir):
 
         size_x = 100
         size_y = 200
-        size_z = 5
-        size_c = 2
-        size_t = 4
+        size_z = 1
+        size_c = 1
+        size_t = 1
 
         conn = get_connection(user1)
         user_name = conn.getUser().getName()
@@ -84,4 +90,35 @@ class TestNgff(IWebTest):
         zarray_url = reverse('zarr_image_zarray',
                              kwargs={"iid": image_id, "level": 0})
         zarray_json = get_json(django_client, zarray_url)
-        assert zarray_json["shape"] == [size_t, size_c, size_z, size_y, size_x]
+        assert zarray_json["shape"] == [size_y, size_x]
+
+        # write json to disk in tmpdir
+        os.makedirs(tmpdir.join("0"))
+        json_data = [zattrs_json, zgroup_json, zarray_json]
+        file_names = [".zattrs", ".zgroup", "0/.zarray"]
+        for data, name in zip(json_data, file_names):
+            with open(tmpdir.join(name), 'w') as f:
+                f.write(json.dumps(data))
+
+        # 2D image
+        chunk = "0/0"
+        chunk_url = reverse("zarr_image_chunk",
+                            kwargs={"iid": image_id,
+                                    "level": 0,
+                                    "chunk": chunk})
+        rsp = get(django_client, chunk_url)
+        chunk_data = rsp.content
+        os.makedirs(tmpdir.join(chunk))
+        # write chunk to disk
+        with open(str(tmpdir.join(chunk, "0")), 'wb') as f:
+            f.write(chunk_data)
+
+        # check shape - reading pixel data fails: all 0?
+        zarr_image = zarr.open(str(tmpdir), mode='r')
+        assert zarr_image['0'].shape == (size_y, size_x)
+
+        # Open with ome-zarr to check we have data
+        z = parse_url(str(tmpdir))
+        reader = Reader(z)
+        for n in reader():
+            assert n.data[0].max().compute() > 0
