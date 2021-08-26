@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from django.http.response import Http404
 import numpy as np
 import tempfile
 import zarr
@@ -75,7 +76,8 @@ def image_zattrs(request, iid, conn=None, **kwargs):
         "multiscales": [
             {
                 "datasets": datasets,
-                "version": "0.1"
+                "version": "0.3",
+                "axes": get_axes(image)
             }
         ],
         "omero": {
@@ -96,9 +98,19 @@ def image_zgroup(request, **kwargs):
     return JsonResponse({"zarr_format": 2})
 
 
+def get_axes(image):
+    dims = ['t', 'c', 'z', 'y', 'x']
+    axes = []
+    for dim in dims:
+        if getattr(image, 'getSize' + dim.upper())() > 1:
+            axes.append(dim)
+    return axes
+
+
 def get_image_shape(image, level):
 
     shape = [getattr(image, 'getSize' + dim)() for dim in ('TCZYX')]
+    shape = [size for size in shape if size > 1]
     # For down-sampled levels of pyramid, get shape
     if image.requiresPixelsPyramid() and level > 0:
         # init the rendering engine
@@ -114,14 +126,19 @@ def get_image_shape(image, level):
 
 
 def get_chunk_shape(image):
+    chunks = []
+    for dim in ('TCZ'):
+        if getattr(image, 'getSize' + dim)() > 1:
+            chunks.append(1)
     if image.requiresPixelsPyramid():
         # For big images...
         image.getZoomLevelScaling()
         width, height = image._re.getTileSize()
-        chunks = [1, 1, 1, height, width]
     else:
         # If image is small, could have chunk as whole plane
-        chunks = [1, 1, 1, image.getSizeY(), image.getSizeX()]
+        width = image.getSizeY()
+        height = image.getSizeX()
+    chunks.extend([height, width])
     return chunks
 
 
@@ -148,19 +165,38 @@ def image_zarray(request, iid, level, conn=None, **kwargs):
             json_text = reader.read()
             rsp = json.loads(json_text)
 
+    # seems that zarr.open_arry doesn't support dimension_separator
+    rsp["dimension_separator"] = "/"
+
     return JsonResponse(rsp)
 
 
 @login_required()
-def image_chunk(request, iid, level, t, c, z, y, x, conn=None, **kwargs):
+def image_chunk(request, iid, level, chunk, conn=None, **kwargs):
 
-    x, y, z, c, t, level = [int(dim) for dim in (x, y, z, c, t, level)]
+    # E.g. dims [0, 0, 0, 0, 0] for 5D image or [0, 0, 0] for 3D image
+    dims = [int(dim) for dim in chunk.split("/")]
 
     image = conn.getObject("Image", iid)
+    # E.g. axes = ['t', 'c', 'z', 'y', 'x'] for 5D image or ['c', 'y', 'x']
+    axes = get_axes(image)
+
+    # dims from URL must match number of axes
+    if len(dims) != len(axes):
+        raise Http404(
+            "chunk %s has incorrect number of dimensions for axes: %s" %
+            (chunk, axes))
+
     shape = get_image_shape(image, level)
     chunks = get_chunk_shape(image)
     ptype = image.getPrimaryPixels().getPixelsType().getValue()
     np_type = PIXEL_TYPES[ptype]
+
+    x = dims[-1]
+    y = dims[-2]
+    z = dims[axes.index('z')] if 'z' in axes else 0
+    c = dims[axes.index('c')] if 'c' in axes else 0
+    t = dims[axes.index('t')] if 't' in axes else 0
 
     tile_w = chunks[-1]
     tile_h = chunks[-2]
@@ -197,15 +233,23 @@ def image_chunk(request, iid, level, t, c, z, y, x, conn=None, **kwargs):
         plane2[0:tile_h, 0:tile_w] = plane
         plane = plane2
 
+    indices = []
+    for dim in "tcz":
+        if dim in axes:
+            indices.append(0)
+
     data = ""
     with tempfile.TemporaryDirectory() as tmpdirname:
         # write single chunk to array of same shape
         zarr_array = zarr.open_array(tmpdirname, mode='w', shape=chunks,
                                      chunks=chunks, dtype=plane.dtype)
-        zarr_array[0, 0, 0, :, :] = plane
+        zarr_array[tuple(indices)] = plane
 
         # reads chunk
-        chunk_path = os.path.join(tmpdirname, "0.0.0.0.0")
+        indices.extend([0, 0])
+        indices = [str(size) for size in indices]
+        # path/to/0.0.0.0.0 for 5D image
+        chunk_path = os.path.join(tmpdirname, ".".join(indices))
         with open(chunk_path, 'rb') as reader:
             data = reader.read()
 
