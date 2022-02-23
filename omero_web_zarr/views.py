@@ -218,7 +218,7 @@ def image_chunk(request, iid, level, t, c, z, y, x, conn=None, **kwargs):
 
 def vizarr(request, url):
     """
-    Self-host vizarr to avoit CORS issues
+    Self-host vizarr to avoid CORS issues
 
     Delegate all requests to https://hms-dbmi.github.io/vizarr/
     """
