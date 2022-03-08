@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2021 University of Dundee & Open Microscopy Environment.
+# Copyright (C) 2021-2022 University of Dundee & Open Microscopy Environment.
 # All rights reserved. Use is subject to license terms supplied in LICENSE.txt
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,11 +19,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-"""Integration tests for testing saving and loading figure files."""
+"""Integration tests for reading zarr data."""
 
 from omeroweb.testlib import IWebTest, get
 import pytest
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from omero.gateway import BlitzGateway
 
 
