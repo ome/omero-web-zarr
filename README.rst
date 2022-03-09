@@ -1,3 +1,9 @@
+.. image:: https://github.com/ome/omero-web-zarr/workflows/OMERO/badge.svg
+    :target: https://github.com/ome/omero-web-zarr/actions
+
+.. image:: https://badge.fury.io/py/omero-web-zarr.svg
+    :target: https://badge.fury.io/py/omero-web-zarr
+
 # omero-web-zarr
 
 Implementation of [OME-NGFF](https://ngff.openmicroscopy.org/latest/) API with an omero-web app.
