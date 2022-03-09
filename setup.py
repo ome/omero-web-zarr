@@ -1,4 +1,6 @@
 from setuptools import setup, find_packages
+import os
+
 
 def read(fname):
     """
@@ -7,13 +9,14 @@ def read(fname):
     """
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 VERSION = '0.1.0.dev0'
 
 setup(
     name='omero-web-zarr',
     version=VERSION,
     description="OMERO.web plugin for OME-Zarr",
-    long_description=read("README.rst")
+    long_description=read("README.rst"),
     classifiers=[
           'Environment :: Web Environment',
           'Framework :: Django',
