@@ -24,6 +24,7 @@ import requests
 
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
+from django.shortcuts import redirect
 
 from omero.model.enums import PixelsTypeint8, PixelsTypeuint8, PixelsTypeint16
 from omero.model.enums import PixelsTypeuint16, PixelsTypeint32
@@ -222,6 +223,15 @@ def vizarr(request, url):
 
     Delegate all requests to https://hms-dbmi.github.io/vizarr/
     """
+
+    # Openwith initially uses a 'source' that is not a valid URL e.g.
+    # http://omero-server.org/zarr/vizarr/?source=/zarr/image/3978085.zarr
+    # If so, make the 'source' absolute and redirect...
+    source = request.GET.get("source")
+    if source is not None and not source.startswith("http"):
+        source = request.build_absolute_uri(source)
+        vizarr_url = reverse("zarr_vizarr", kwargs={"url": ""})
+        return redirect(vizarr_url + "?source=" + source)
 
     base_url = "https://hms-dbmi.github.io/vizarr/"
     target_url = base_url + url
