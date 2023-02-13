@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 University of Dundee.
+# Copyright (c) 2021-2022 University of Dundee.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,7 @@ import json
 import requests
 
 from django.http import HttpResponse, JsonResponse
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from omero.model.enums import PixelsTypeint8, PixelsTypeuint8, PixelsTypeint16
 from omero.model.enums import PixelsTypeuint16, PixelsTypeint32
@@ -262,7 +262,7 @@ def image_chunk(request, iid, level, chunk, conn=None, **kwargs):
 
 def vizarr(request, url):
     """
-    Self-host vizarr to avoit CORS issues
+    Self-host vizarr to avoid CORS issues
 
     Delegate all requests to https://hms-dbmi.github.io/vizarr/
     """

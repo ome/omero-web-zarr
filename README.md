@@ -39,7 +39,7 @@ This omero-web app self-hosts Vizarr to avoid CORS issues (delegating to https:/
 
 In the webclient UI you can use the context menu to `Open With > Vizarr`, or use your Image ID and go directly to:
 
-    [omero-server]/zarr/vizarr/?source=/zarr/image/[ID].zarr
+    [omero-server]/zarr/vizarr/?source=[omero-server]/zarr/image/[ID].zarr
 
 # Testing
 
