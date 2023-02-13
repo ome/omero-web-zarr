@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (C) 2021-2022 University of Dundee & Open Microscopy Environment.
+# Copyright (C) 2021-2023 University of Dundee & Open Microscopy Environment.
 # All rights reserved. Use is subject to license terms supplied in LICENSE.txt
 #
 # This program is free software; you can redistribute it and/or modify
@@ -62,7 +62,8 @@ class TestNgff(IWebTest):
         rsp = get(django_client, index_url)
         assert rsp is not None
 
-    def test_image_zarr(self, user1, tmpdir):
+    @pytest.mark.parametrize("version", ("0.3", "0.4"))
+    def test_image_zarr(self, user1, tmpdir, version):
 
         size_x = 100
         size_y = 200
@@ -79,16 +80,17 @@ class TestNgff(IWebTest):
             size_z=size_z, size_c=size_c, size_t=size_t)
         image_id = image.id.val
 
-        zattrs_url = reverse('zarr_image_zattrs', kwargs={"iid": image_id})
+        kwargs = {"iid": image_id, "version": version}
+        zattrs_url = reverse('zarr_image_zattrs', kwargs=kwargs)
         zattrs_json = get_json(django_client, zattrs_url)
         assert(len(zattrs_json["multiscales"]) == 1)
 
-        zgroup_url = reverse('zarr_image_zgroup', kwargs={"iid": image_id})
+        zgroup_url = reverse('zarr_image_zgroup', kwargs=kwargs)
         zgroup_json = get_json(django_client, zgroup_url)
         assert zgroup_json["zarr_format"] == 2
 
         zarray_url = reverse('zarr_image_zarray',
-                             kwargs={"iid": image_id, "level": 0})
+                             kwargs={**kwargs, "level": 0})
         zarray_json = get_json(django_client, zarray_url)
         assert zarray_json["shape"] == [size_y, size_x]
 
@@ -103,7 +105,7 @@ class TestNgff(IWebTest):
         # 2D image
         chunk = "0/0"
         chunk_url = reverse("zarr_image_chunk",
-                            kwargs={"iid": image_id,
+                            kwargs={**kwargs,
                                     "level": 0,
                                     "chunk": chunk})
         rsp = get(django_client, chunk_url)

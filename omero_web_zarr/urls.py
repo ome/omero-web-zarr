@@ -24,16 +24,16 @@ urlpatterns = [
     # index 'home page' of the app
     url(r'^$', views.index, name="omero_web_zarr_index"),
 
-    url(r'^image/(?P<iid>[0-9]+).zarr/.zattrs$',
+    url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/.zattrs$',
         views.image_zattrs, name='zarr_image_zattrs'),
 
-    url(r'^image/(?P<iid>[0-9]+).zarr/.zgroup$',
+    url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/.zgroup$',
         views.image_zgroup, name='zarr_image_zgroup'),
 
-    url(r'^image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/.zarray$',
+    url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/.zarray$',
         views.image_zarray, name='zarr_image_zarray'),
 
-    url(r'^image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/(?P<chunk>[0-9/]+)$',
+    url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/(?P<chunk>[0-9/]+)$',
         views.image_chunk, name='zarr_image_chunk'),
 
     # Delegate all /vizarr/* urls to https://hms-dbmi.github.io/vizarr/

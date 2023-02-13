@@ -26,6 +26,8 @@ import requests
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 
+from .utils import marshal_axes, marshal_axes_v3
+
 from omero.model.enums import PixelsTypeint8, PixelsTypeuint8, PixelsTypeint16
 from omero.model.enums import PixelsTypeuint16, PixelsTypeint32
 from omero.model.enums import PixelsTypeuint32, PixelsTypefloat
@@ -59,7 +61,11 @@ def index(request, conn=None, **kwargs):
 
 
 @login_required()
-def image_zattrs(request, iid, conn=None, **kwargs):
+def image_zattrs(request, iid, version, conn=None, **kwargs):
+
+    print("version", version)
+    if version not in ("0.3", "0.4"):
+        raise Http404("version not supported")
 
     image = conn.getObject("Image", iid)
 
@@ -76,8 +82,8 @@ def image_zattrs(request, iid, conn=None, **kwargs):
         "multiscales": [
             {
                 "datasets": datasets,
-                "version": "0.3",
-                "axes": get_axes(image)
+                "version": version,
+                "axes": marshal_axes(image, version)
             }
         ],
         "omero": {
@@ -96,15 +102,6 @@ def image_zattrs(request, iid, conn=None, **kwargs):
 
 def image_zgroup(request, **kwargs):
     return JsonResponse({"zarr_format": 2})
-
-
-def get_axes(image):
-    dims = ['t', 'c', 'z', 'y', 'x']
-    axes = []
-    for dim in dims:
-        if getattr(image, 'getSize' + dim.upper())() > 1:
-            axes.append(dim)
-    return axes
 
 
 def get_image_shape(image, level):
@@ -179,7 +176,7 @@ def image_chunk(request, iid, level, chunk, conn=None, **kwargs):
 
     image = conn.getObject("Image", iid)
     # E.g. axes = ['t', 'c', 'z', 'y', 'x'] for 5D image or ['c', 'y', 'x']
-    axes = get_axes(image)
+    axes = marshal_axes_v3(image)
 
     # dims from URL must match number of axes
     if len(dims) != len(axes):
