@@ -38,4 +38,6 @@ urlpatterns = [
 
     # Delegate all /vizarr/* urls to https://hms-dbmi.github.io/vizarr/
     url(r'^vizarr/(?P<url>.*)$', views.vizarr, name='zarr_vizarr'),
+
+    url(r'^validator/(?P<url>.*)$', views.validator, name='zarr_validator'),
 ]

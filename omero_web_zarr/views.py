@@ -26,7 +26,7 @@ import requests
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 
-from .utils import marshal_axes, marshal_axes_v3
+from .utils import marshal_axes, marshal_axes_v3, generate_coordinate_transformations
 
 from omero.model.enums import PixelsTypeint8, PixelsTypeuint8, PixelsTypeint16
 from omero.model.enums import PixelsTypeuint16, PixelsTypeint32
@@ -78,6 +78,12 @@ def image_zattrs(request, iid, version, conn=None, **kwargs):
 
     datasets = [{"path": str(level)} for level in levels]
 
+    if version != "0.3":
+        shapes = get_image_shapes(image)
+        coordinate_transformations = generate_coordinate_transformations(shapes)
+        for dataset, transform in zip(datasets, coordinate_transformations):
+            dataset["coordinateTransformations"] = transform
+
     rv = {
         "multiscales": [
             {
@@ -106,20 +112,30 @@ def image_zgroup(request, **kwargs):
 
 def get_image_shape(image, level):
 
+    shapes = get_image_shapes(image)
+    if level >= len(shapes):
+        raise Exception(
+            "Level %s higher than %s levels for this image" %
+            (level, len(shapes)))
+    return shapes[level]
+
+
+def get_image_shapes(image):
+
     shape = [getattr(image, 'getSize' + dim)() for dim in ('TCZYX')]
-    shape = [size for size in shape if size > 1]
+    base_shape = [size for size in shape if size > 1]
     # For down-sampled levels of pyramid, get shape
-    if image.requiresPixelsPyramid() and level > 0:
+    shapes = [base_shape]
+    if image.requiresPixelsPyramid():
         # init the rendering engine
         image.getZoomLevelScaling()
         levels = image._re.getResolutionDescriptions()
-        if level >= len(levels):
-            raise Exception(
-                "Level %s higher than %s levels for this image" %
-                (level, len(levels)))
-        shape[-1] = levels[level].sizeX
-        shape[-2] = levels[level].sizeY
-    return shape
+        for level in levels[1:]:
+            shape = base_shape[:]
+            shape[-1] = level.sizeX
+            shape[-2] = level.sizeY
+            shapes.append(shape)
+    return shapes
 
 
 def get_chunk_shape(image):
@@ -184,6 +200,7 @@ def image_chunk(request, iid, level, chunk, conn=None, **kwargs):
             "chunk %s has incorrect number of dimensions for axes: %s" %
             (chunk, axes))
 
+    level = int(level)
     shape = get_image_shape(image, level)
     chunks = get_chunk_shape(image)
     ptype = image.getPrimaryPixels().getPixelsType().getValue()
@@ -265,6 +282,27 @@ def vizarr(request, url):
     """
 
     base_url = "https://hms-dbmi.github.io/vizarr/"
+    target_url = base_url + url
+
+    response = requests.get(target_url)
+
+    rsp = HttpResponse(response.content)
+
+    if url.endswith(".js"):
+        rsp['content-type'] = "application/javascript"
+
+    return rsp
+
+
+def validator(request, url):
+
+    """
+    Self-host ome-ngff-validator to avoid CORS issues
+
+    Delegate all requests to https://ome.github.io/ome-ngff-validator/
+    """
+
+    base_url = "https://ome.github.io/ome-ngff-validator/"
     target_url = base_url + url
 
     response = requests.get(target_url)
