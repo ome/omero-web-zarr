@@ -36,8 +36,7 @@ urlpatterns = [
     url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/(?P<chunk>[0-9/]+)$',
         views.image_chunk, name='zarr_image_chunk'),
 
-    # Delegate all /vizarr/* urls to https://hms-dbmi.github.io/vizarr/
-    url(r'^vizarr/(?P<url>.*)$', views.vizarr, name='zarr_vizarr'),
+    # Delegate all /vizarr/ or /validator/ urls to statically-hosted files
+    url(r'^(?P<app>vizarr|validator)/(?P<url>.*)$', views.apps, name='zarr_app'),
 
-    url(r'^validator/(?P<url>.*)$', views.validator, name='zarr_validator'),
 ]

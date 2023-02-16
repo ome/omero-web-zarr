@@ -25,6 +25,7 @@ import requests
 
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
+from django.shortcuts import redirect
 
 from .utils import marshal_axes, marshal_axes_v3, generate_coordinate_transformations
 
@@ -274,35 +275,32 @@ def image_chunk(request, iid, level, chunk, conn=None, **kwargs):
     return rsp
 
 
-def vizarr(request, url):
+def apps(request, app, url):
     """
-    Self-host vizarr to avoid CORS issues
+    Self-host app (vizarr or ome-ngff-validator) to avoid CORS issues
 
-    Delegate all requests to https://hms-dbmi.github.io/vizarr/
-    """
-
-    base_url = "https://hms-dbmi.github.io/vizarr/"
-    target_url = base_url + url
-
-    response = requests.get(target_url)
-
-    rsp = HttpResponse(response.content)
-
-    if url.endswith(".js"):
-        rsp['content-type'] = "application/javascript"
-
-    return rsp
-
-
-def validator(request, url):
-
-    """
-    Self-host ome-ngff-validator to avoid CORS issues
-
-    Delegate all requests to https://ome.github.io/ome-ngff-validator/
+    Delegate all vizarr requests to https://hms-dbmi.github.io/vizarr/
+    and validator requests to https://ome.github.io/ome-ngff-validator/
     """
 
-    base_url = "https://ome.github.io/ome-ngff-validator/"
+    # Both vizarr and validator use 'source'
+    # Openwith initially uses a 'source' that is not a valid URL e.g.
+    # http://omero-server.org/zarr/vizarr/?source=/zarr/image/3978085.zarr
+    # If so, make the 'source' absolute and redirect...
+    source = request.GET.get("source")
+    if source is not None and not source.startswith("http"):
+        source = request.build_absolute_uri(source)
+        new_url = reverse("zarr_app", kwargs={"url": "", "app": app})
+        return redirect(new_url + "?source=" + source)
+
+    base_urls = {
+        "vizarr": "https://hms-dbmi.github.io/vizarr/",
+        "validator": "https://ome.github.io/ome-ngff-validator/",
+    }
+    if app not in base_urls:
+        raise Http404("App: %s not found" % app)
+
+    base_url = base_urls[app]
     target_url = base_url + url
 
     response = requests.get(target_url)
