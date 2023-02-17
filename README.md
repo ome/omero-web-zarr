@@ -9,7 +9,8 @@ For a given Image ID in OMERO, the following URL will refer to an OME-NGFF image
 
 NB: This app has not been extensively testing and should not be considered "production ready".
 
-Currently supports [OME-NGFF v0.3](https://ngff.openmicroscopy.org/0.2/index.html).
+Currently supports [OME-NGFF v0.3](https://ngff.openmicroscopy.org/0.3/index.html) and
+[OME-NGFF v0.4](https://ngff.openmicroscopy.org/0.4/index.html).
 
 # Dev Install
 
