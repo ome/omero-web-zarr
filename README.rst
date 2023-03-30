@@ -12,7 +12,7 @@ OMERO.web plugin for OME-Zarr.
 Implementation of [OME-NGFF](https://ngff.openmicroscopy.org/latest/) API with an omero-web app.
 
 This plugin supports OME-NGFF v0.1, v03, v0.4.
-For a given Image ID in OMERO, the following URL will refer to an OME-NGFF image:
+For a given Image ID in OMERO, the following URL will refer to an OME-NGFF image::
 
     https://[omero-server]/zarr/image/ID.zarr/
 
@@ -63,7 +63,7 @@ You can see this in action using the [Vizarr](https://github.com/hms-dbmi/vizarr
 
 This omero-web app self-hosts Vizarr to avoid CORS issues (delegating to https://hms-dbmi.github.io/vizarr/).
 
-In the webclient UI you can use the context menu to `Open With > Vizarr`, or use your Image ID and go directly to:
+In the webclient UI you can use the context menu to `Open With > Vizarr`, or use your Image ID and go directly to::
 
     [omero-server]/zarr/vizarr/?source=[omero-server]/zarr/v0.4/image/[ID].zarr
 
