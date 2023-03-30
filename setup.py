@@ -4,7 +4,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as test_command
 
-VERSION = '0.1.0'
+VERSION = '0.1.0.dev0'
 DESCRIPTION = "OMERO.web plugin for OME-Zarr"
 AUTHOR = "The Open Microscopy Team"
 LICENSE = "AGPL-3.0"
