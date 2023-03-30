@@ -24,7 +24,7 @@ Currently supports [OME-NGFF v0.3](https://ngff.openmicroscopy.org/0.3/index.htm
 Development
 -----------
 
-Install with:
+Install with::
 
     $ pip install -e .
 
@@ -43,7 +43,7 @@ Configuration
     $ omero config append omero.web.open_with '["web_zarr_validator", "omero_web_zarr_index", {"supported_objects":["image"], "label": "NGFF validator", "script_url": "omero_web_zarr/openwith_validator.js"}]'
 
 
-Then you will be able to access OMERO Images in OME-NGFF format v0.3 or v0.4 with a URLs like:
+Then you will be able to access OMERO Images in OME-NGFF format v0.3 or v0.4 with a URLs like::
 
     # base URL for Image ID
     [omero-server]/zarr/v0.4/image/[ID].zarr
