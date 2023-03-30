@@ -68,7 +68,6 @@ setup(
     name='omero-web-zarr',
     version=VERSION,
     description=DESCRIPTION,
-    license='AGPL-3.0',
     long_description=read('README.rst'),
           classifiers=[
           'Development Status :: 3 - Alpha',
@@ -93,7 +92,7 @@ setup(
     author_email='ome-devel@lists.openmicroscopy.org.uk',
     license=LICENSE,
     url= HOMEPAGE,
-    download_url='%s/archive/v%s.tar.gz' % (HOMEPAGE, VERSION),format(version=VERSION),  # NOQA
+    download_url='%s/archive/v%s.tar.gz' % (HOMEPAGE, VERSION),  # NOQA
     packages=find_packages(),
     keywords=['omero', 'zarr', 'ome', 'web'],
     install_requires=['zarr'],
