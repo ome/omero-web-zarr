@@ -91,7 +91,7 @@ setup(
     author=AUTHOR,
     author_email='ome-devel@lists.openmicroscopy.org.uk',
     license=LICENSE,
-    url= HOMEPAGE,
+    url=HOMEPAGE,
     download_url='%s/archive/v%s.tar.gz' % (HOMEPAGE, VERSION),  # NOQA
     packages=find_packages(),
     keywords=['omero', 'zarr', 'ome', 'web'],
