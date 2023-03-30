@@ -34,6 +34,14 @@ Configuration
 
     $ omero config append omero.web.apps '"omero_web_zarr"'
 
+    # Allow to open-with Vizarr
+
+    $ omero config append omero.web.open_with '["web_zarr_vizarr", "omero_web_zarr_index", {"supported_objects":["image"], "label": "Vizarr", "script_url": "omero_web_zarr/openwith.js"}]'
+
+    # Open with ome-ngff-validator
+
+    $ omero config append omero.web.open_with '["web_zarr_validator", "omero_web_zarr_index", {"supported_objects":["image"], "label": "NGFF validator", "script_url": "omero_web_zarr/openwith_validator.js"}]'
+
 
 Then you will be able to access OMERO Images in OME-NGFF format v0.3 or v0.4 with a URLs like:
 
