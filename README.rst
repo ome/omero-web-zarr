@@ -72,7 +72,7 @@ Testing
 
 To run integration tests (in your omero-web conda environment above) with `pytest`.
 See [OMERO testing docs](https://docs.openmicroscopy.org/latest/omero/developers/testing.html)
-for setting `ICE_CONFIG` and dependencies etc, then:
+for setting `ICE_CONFIG` and dependencies etc., then::
 
     $ pytest test/integration/test_ngff.py
 
