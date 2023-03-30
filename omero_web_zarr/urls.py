@@ -30,13 +30,13 @@ urlpatterns = [
     url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/.zgroup$',
         views.image_zgroup, name='zarr_image_zgroup'),
 
-    url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/.zarray$',
+    url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/.zarray$',  # noqa
         views.image_zarray, name='zarr_image_zarray'),
 
-    url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/(?P<chunk>[0-9/]+)$',
+    url(r'^v(?P<version>0\.[3-4]+)/image/(?P<iid>[0-9]+).zarr/(?P<level>[0-9]+)/(?P<chunk>[0-9/]+)$',  # noqa
         views.image_chunk, name='zarr_image_chunk'),
 
     # Delegate all /vizarr/ or /validator/ urls to statically-hosted files
-    url(r'^(?P<app>vizarr|validator)/(?P<url>.*)$', views.apps, name='zarr_app'),
+    url(r'^(?P<app>vizarr|validator)/(?P<url>.*)$', views.apps, name='zarr_app'),  # noqa
 
 ]

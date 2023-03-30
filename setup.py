@@ -4,6 +4,12 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as test_command
 
+VERSION = '0.1.0.dev0'
+DESCRIPTION = "OMERO.web plugin for OME-Zarr"
+AUTHOR = "The Open Microscopy Team"
+LICENSE = "AGPL-3.0"
+HOMEPAGE = "https://github.com/ome/omero-web-zarr"
+
 
 class PyTest(test_command):
 
@@ -54,14 +60,44 @@ class PyTest(test_command):
         sys.exit(errno)
 
 
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
 setup(
     name='omero-web-zarr',
-    version='0.0.2',
-    description="OMERO.web plugin for OME-Zarr",
+    version=VERSION,
+    description=DESCRIPTION,
+    long_description=read('README.rst'),
+          classifiers=[
+          'Development Status :: 3 - Alpha',
+          'Environment :: Web Environment',
+          'Framework :: Django',
+          'Intended Audience :: End Users/Desktop',
+          'Intended Audience :: Science/Research',
+          'Natural Language :: English',
+          'Operating System :: OS Independent',
+          'Programming Language :: JavaScript',
+          'Programming Language :: Python :: 3',
+          'Topic :: Internet :: WWW/HTTP',
+          'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+          'Topic :: Internet :: WWW/HTTP :: WSGI',
+          'Topic :: Scientific/Engineering :: Visualization',
+          'Topic :: Software Development :: Libraries :: '
+          'Application Frameworks',
+          'Topic :: Text Processing :: Markup :: HTML'
+      ],  # Get strings from
+          # http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    author=AUTHOR,
+    author_email='ome-devel@lists.openmicroscopy.org.uk',
+    license=LICENSE,
+    url=HOMEPAGE,
+    download_url='%s/archive/v%s.tar.gz' % (HOMEPAGE, VERSION),  # NOQA
     packages=find_packages(),
     keywords=['omero', 'zarr', 'ome', 'web'],
     install_requires=['zarr'],
     include_package_data=True,
+    zip_safe=False,
     cmdclass={'test': PyTest},
     tests_require=['pytest', 'ome_zarr'],
 )

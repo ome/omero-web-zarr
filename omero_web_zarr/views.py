@@ -27,7 +27,8 @@ from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.shortcuts import redirect
 
-from .utils import marshal_axes, marshal_axes_v3, generate_coordinate_transformations
+from .utils import marshal_axes, marshal_axes_v3
+from .utils import generate_coordinate_transformations
 
 from omero.model.enums import PixelsTypeint8, PixelsTypeuint8, PixelsTypeint16
 from omero.model.enums import PixelsTypeuint16, PixelsTypeint32
@@ -81,8 +82,8 @@ def image_zattrs(request, iid, version, conn=None, **kwargs):
 
     if version != "0.3":
         shapes = get_image_shapes(image)
-        coordinate_transformations = generate_coordinate_transformations(shapes)
-        for dataset, transform in zip(datasets, coordinate_transformations):
+        transformations = generate_coordinate_transformations(shapes)
+        for dataset, transform in zip(datasets, transformations):
             dataset["coordinateTransformations"] = transform
 
     rv = {

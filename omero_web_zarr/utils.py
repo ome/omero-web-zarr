@@ -18,6 +18,7 @@
 
 from django.http import Http404
 
+
 def marshal_pixel_sizes(image):
 
     pixel_sizes = {}
@@ -42,6 +43,7 @@ def marshal_pixel_sizes(image):
         }
     return pixel_sizes
 
+
 def marshal_axes_v3(image):
     dims = ['t', 'c', 'z', 'y', 'x']
     axes = []
@@ -49,6 +51,7 @@ def marshal_axes_v3(image):
         if getattr(image, 'getSize' + dim.upper())() > 1:
             axes.append(dim)
     return axes
+
 
 def marshal_axes(image, version):
 
@@ -81,14 +84,15 @@ def marshal_axes(image, version):
 
     return axes
 
+
 def generate_coordinate_transformations(shapes):
 
         data_shape = shapes[0]
-        coordinate_transformations = []
+        transformations = []
         # calculate minimal 'scale' transform based on pyramid dims
         for shape in shapes:
             assert len(shape) == len(data_shape)
             scale = [full / level for full, level in zip(data_shape, shape)]
-            coordinate_transformations.append([{"type": "scale", "scale": scale}])
+            transformations.append([{"type": "scale", "scale": scale}])
 
-        return coordinate_transformations
+        return transformations
