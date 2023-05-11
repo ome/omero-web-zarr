@@ -42,6 +42,10 @@ Configuration
 
     $ omero config append omero.web.open_with '["web_zarr_validator", "omero_web_zarr_index", {"supported_objects":["image"], "label": "NGFF validator", "script_url": "omero_web_zarr/openwith_validator.js"}]'
 
+    # Open with vtk-itk viewer
+
+    $ omero config append omero.web.open_with '["web_zarr_itkvtk", "omero_web_zarr_index", {"supported_objects":["image"], "label": "itk-vtk viewer", "script_url": "omero_web_zarr/openwith_itkvtk.js"}]'
+
 
 Then you will be able to access OMERO Images in OME-NGFF format v0.3 or v0.4 with a URLs like::
 
