@@ -292,7 +292,7 @@ def apps(request, app, url):
     if source is not None and not source.startswith("http"):
         source = request.build_absolute_uri(source)
         new_url = reverse("zarr_app", kwargs={"url": "", "app": app})
-        # in case Django doesn't know .is_secure() and gives http instead of https
+        # in case Django .is_secure() wrongly gives http instead of https
         if not source.startswith(request.scheme + ":"):
             source = request.scheme + ":" + source.split(":", 1)[1]
         return redirect(new_url + "?source=" + source)
