@@ -37,6 +37,6 @@ urlpatterns = [
         views.image_chunk, name='zarr_image_chunk'),
 
     # Delegate all /vizarr/ or /validator/ urls to statically-hosted files
-    url(r'^(?P<app>vizarr|validator)/(?P<url>.*)$', views.apps, name='zarr_app'),  # noqa
+    url(r'^(?P<app>vizarr|validator|itkvtk)/(?P<url>.*)$', views.apps, name='zarr_app'),  # noqa
 
 ]

@@ -285,18 +285,30 @@ def apps(request, app, url):
     """
 
     # Both vizarr and validator use 'source'
+
+    source_keys = {
+        "vizarr": "source",
+        "validator": "source",
+        "itkvtk": "fileToLoad"
+    }
+
     # Openwith initially uses a 'source' that is not a valid URL e.g.
     # http://omero-server.org/zarr/vizarr/?source=/zarr/image/3978085.zarr
     # If so, make the 'source' absolute and redirect...
-    source = request.GET.get("source")
+    source_key = source_keys[app]
+    source = request.GET.get(source_key)
     if source is not None and not source.startswith("http"):
         source = request.build_absolute_uri(source)
         new_url = reverse("zarr_app", kwargs={"url": "", "app": app})
-        return redirect(new_url + "?source=" + source)
+        query_dict = request.GET.copy()
+        query_dict[source_key] = source
+        return redirect(new_url + "?" + query_dict.urlencode())
 
+    # load static content from these URLs
     base_urls = {
         "vizarr": "https://hms-dbmi.github.io/vizarr/",
         "validator": "https://ome.github.io/ome-ngff-validator/",
+        "itkvtk": "https://kitware.github.io/itk-vtk-viewer/app/"
     }
     if app not in base_urls:
         raise Http404("App: %s not found" % app)
