@@ -22,6 +22,7 @@ import zarr
 import os
 import json
 import requests
+from io import BytesIO
 
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
@@ -29,6 +30,7 @@ from django.shortcuts import redirect
 
 from .utils import marshal_axes, marshal_axes_v3
 from .utils import generate_coordinate_transformations
+from .render import render_image_to_pil
 
 from omero.model.enums import PixelsTypeint8, PixelsTypeuint8, PixelsTypeint16
 from omero.model.enums import PixelsTypeuint16, PixelsTypeint32
@@ -36,6 +38,8 @@ from omero.model.enums import PixelsTypeuint32, PixelsTypefloat
 from omero.model.enums import PixelsTypedouble
 from omeroweb.webclient.decorators import login_required
 from omeroweb.webgateway.marshal import channelMarshal
+from omero.sys import ParametersI
+from omero.rtypes import rstring
 
 PIXEL_TYPES = {
     PixelsTypeint8: np.int8,
@@ -312,3 +316,64 @@ def apps(request, app, url):
         rsp['content-type'] = "application/javascript"
 
     return rsp
+
+
+@login_required()
+def render_image(request, iid, z=None, t=None, conn=None, **kwargs):
+    """
+    Renders the image with id {{iid}} at {{z}} and {{t}} as jpeg.
+    We ONLY support Zarr Images here.
+
+    @param request:     http request
+    @param iid:         image ID
+    @param z:           Z index
+    @param t:           T index
+    @param conn:        L{omero.gateway.BlitzGateway} connection
+    @return:            http response wrapping jpeg
+    """
+
+    # Check we have a Zarr Image - look for Fileset clientPath ending with .zarr/.zattrs
+    iid = int(iid)
+    query_service = conn.getQueryService()
+    params = ParametersI()
+    params.addId(iid)
+    params.add("zarr", rstring("%%%s" % "zarr/.zattrs"))
+    query = """ select u.clientPath from Fileset fs
+        join fs.usedFiles u
+        left outer join fs.images as image
+        where image.id=:id
+        and u.clientPath like :zarr"""
+    
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    if len(result) == 0:
+        return Http404("Image has no clientPath of zarr/.zattrs")
+
+    # We also need clientPath to be a publicly-accessible URL
+    client_path = result[0][0].val
+    if not client_path.startswith("http"):
+        return Http404("Zarr clientPath is not public http..")
+
+    zarr_path = client_path.replace("/.zattrs", "")
+
+    # Check if Image is in a Well - need to add /row/col/field/ e.g. /A/1/0
+    wsparams = ParametersI()
+    wsparams.addId(iid)
+    wsquery = """select well.plate.id, well.row, well.column, index(ws) from Well well
+        join well.wellSamples ws where ws.image.id=:id"""
+    ws = query_service.projection(wsquery, wsparams, conn.SERVICE_OPTS)
+    if len(ws) > 0:
+        plate_id = ws[0][0].val
+        plate = conn.getObject("Plate", plate_id)
+        row = plate.getRowLabels()[ws[0][1].val]
+        column = plate.getColumnLabels()[ws[0][2].val]
+        ws_index = ws[0][3].val
+        row_col_field = f"/{row}/{column}/{ws_index}/"
+        zarr_path += row_col_field
+
+    # Render the image... NB - hard-coded rendering settings for testing!
+    image = render_image_to_pil(zarr_path)
+    output = BytesIO()
+    image.save(output, "jpeg")
+    jpeg_data = output.getvalue()
+    output.close()
+    return HttpResponse(jpeg_data, content_type="image/png")

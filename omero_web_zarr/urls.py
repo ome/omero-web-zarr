@@ -39,4 +39,7 @@ urlpatterns = [
     # Delegate all /vizarr/ or /validator/ urls to statically-hosted files
     re_path(r'^(?P<app>vizarr|validator)/(?P<url>.*)$', views.apps, name='zarr_app'),  # noqa
 
+    # supports same rendering settings in query as webgateway/render_image
+    re_path(r"^render_image/(?P<iid>[0-9]+)/(?:(?P<z>[0-9]+)/)?(?:(?P<t>[0-9]+)/)?$",
+            views.render_image, name="zarr_render_image"),
 ]
