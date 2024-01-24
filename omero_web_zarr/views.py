@@ -336,7 +336,28 @@ def get_zarr_s3_path(conn, image_id):
 
     # We also need clientPath to be a publicly-accessible URL
     client_path = result[0][0].val
-    return client_path.replace("/.zattrs", "")
+    zarr_path = client_path.replace("/.zattrs", "")
+
+    # Check if Image is in a Well - need to add /row/col/field/ e.g. /A/1/0
+    query_service = conn.getQueryService()
+    wsparams = ParametersI()
+    wsparams.addId(image_id)
+    wsquery = """select well.plate.id, well.row, well.column, index(ws) from Well well
+        join well.wellSamples ws where ws.image.id=:id"""
+    ws = query_service.projection(wsquery, wsparams, conn.SERVICE_OPTS)
+    if len(ws) > 0:
+        plate_id = ws[0][0].val
+        plate = conn.getObject("Plate", plate_id)
+        row = plate.getRowLabels()[ws[0][1].val]
+        column = plate.getColumnLabels()[ws[0][2].val]
+        ws_index = ws[0][3].val
+        row_col_field = f"/{row}/{column}/{ws_index}/"
+        zarr_path += row_col_field
+    else:
+        # assume bioformats2raw image?
+        zarr_path += "/0/"
+
+    return zarr_path
 
 
 @login_required()
@@ -360,25 +381,6 @@ def render_image(request, iid, z=None, t=None, conn=None, **kwargs):
         return Http404("Image has no clientPath of zarr/.zattrs")
     if not zarr_path.startswith("http"):
         return Http404("Zarr clientPath is not public http..")
-
-    # Check if Image is in a Well - need to add /row/col/field/ e.g. /A/1/0
-    query_service = conn.getQueryService()
-    wsparams = ParametersI()
-    wsparams.addId(iid)
-    wsquery = """select well.plate.id, well.row, well.column, index(ws) from Well well
-        join well.wellSamples ws where ws.image.id=:id"""
-    ws = query_service.projection(wsquery, wsparams, conn.SERVICE_OPTS)
-    if len(ws) > 0:
-        plate_id = ws[0][0].val
-        plate = conn.getObject("Plate", plate_id)
-        row = plate.getRowLabels()[ws[0][1].val]
-        column = plate.getColumnLabels()[ws[0][2].val]
-        ws_index = ws[0][3].val
-        row_col_field = f"/{row}/{column}/{ws_index}/"
-        zarr_path += row_col_field
-    else:
-        # assume bioformats2raw image?
-        zarr_path += "/0/"
 
     print("zarr_path", zarr_path)
     # load Image and apply any rendering settings from request. e.g. ?c=...
