@@ -18,6 +18,7 @@
 from django.urls import re_path
 
 from . import views
+from omeroweb.webgateway import views as webgateway
 
 urlpatterns = [
 
@@ -42,4 +43,9 @@ urlpatterns = [
     # supports same rendering settings in query as webgateway/render_image
     re_path(r"^render_image/(?P<iid>[0-9]+)/(?:(?P<z>[0-9]+)/)?(?:(?P<t>[0-9]+)/)?$",
             views.render_image, name="zarr_render_image"),
+    re_path(
+        r"^(?:(?P<share_id>[0-9]+)/)?imgData/(?P<iid>[0-9]+)/$",
+        views.imageData, name="web_imageData_json",
+    ),
+    re_path(r"^getImgRDef/$", webgateway.get_image_rdef_json, name="zarr_get_image_rdef_json")
 ]

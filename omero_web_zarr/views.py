@@ -37,8 +37,8 @@ from omero.model.enums import PixelsTypeuint16, PixelsTypeint32
 from omero.model.enums import PixelsTypeuint32, PixelsTypefloat
 from omero.model.enums import PixelsTypedouble
 from omeroweb.webclient.decorators import login_required
-from omeroweb.webgateway.marshal import channelMarshal
-from omeroweb.webgateway.views import _get_prepared_image
+from omeroweb.webgateway.marshal import channelMarshal, imageMarshal
+from omeroweb.webgateway.views import _get_prepared_image, jsonp
 from omero.sys import ParametersI
 from omero.rtypes import rstring
 
@@ -319,6 +319,26 @@ def apps(request, app, url):
     return rsp
 
 
+def get_zarr_s3_path(conn, image_id):
+    query_service = conn.getQueryService()
+    params = ParametersI()
+    params.addId(image_id)
+    params.add("zarr", rstring("%%%s" % "zarr/.zattrs"))
+    query = """ select u.clientPath from Fileset fs
+        join fs.usedFiles u
+        left outer join fs.images as image
+        where image.id=:id
+        and u.clientPath like :zarr"""
+    
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    if len(result) == 0:
+        return None
+
+    # We also need clientPath to be a publicly-accessible URL
+    client_path = result[0][0].val
+    return client_path.replace("/.zattrs", "")
+
+
 @login_required()
 def render_image(request, iid, z=None, t=None, conn=None, **kwargs):
     """
@@ -335,28 +355,14 @@ def render_image(request, iid, z=None, t=None, conn=None, **kwargs):
 
     # Check we have a Zarr Image - look for Fileset clientPath ending with .zarr/.zattrs
     iid = int(iid)
-    query_service = conn.getQueryService()
-    params = ParametersI()
-    params.addId(iid)
-    params.add("zarr", rstring("%%%s" % "zarr/.zattrs"))
-    query = """ select u.clientPath from Fileset fs
-        join fs.usedFiles u
-        left outer join fs.images as image
-        where image.id=:id
-        and u.clientPath like :zarr"""
-    
-    result = query_service.projection(query, params, conn.SERVICE_OPTS)
-    if len(result) == 0:
+    zarr_path = get_zarr_s3_path(conn, iid)
+    if zarr_path is None:
         return Http404("Image has no clientPath of zarr/.zattrs")
-
-    # We also need clientPath to be a publicly-accessible URL
-    client_path = result[0][0].val
-    if not client_path.startswith("http"):
+    if not zarr_path.startswith("http"):
         return Http404("Zarr clientPath is not public http..")
 
-    zarr_path = client_path.replace("/.zattrs", "")
-
     # Check if Image is in a Well - need to add /row/col/field/ e.g. /A/1/0
+    query_service = conn.getQueryService()
     wsparams = ParametersI()
     wsparams.addId(iid)
     wsquery = """select well.plate.id, well.row, well.column, index(ws) from Well well
@@ -370,14 +376,37 @@ def render_image(request, iid, z=None, t=None, conn=None, **kwargs):
         ws_index = ws[0][3].val
         row_col_field = f"/{row}/{column}/{ws_index}/"
         zarr_path += row_col_field
+    else:
+        # assume bioformats2raw image?
+        zarr_path += "/0/"
 
+    print("zarr_path", zarr_path)
     # load Image and apply any rendering settings from request. e.g. ?c=...
     image, quality = _get_prepared_image(request, iid, conn=conn)
 
-    # Render the image... NB - hard-coded rendering settings for testing!
-    pil_img = render_image_to_pil(zarr_path, image)
+    # Render the image...
+    pil_img = render_image_to_pil(zarr_path, image, z, t)
     output = BytesIO()
     pil_img.save(output, "jpeg")
     jpeg_data = output.getvalue()
     output.close()
-    return HttpResponse(jpeg_data, content_type="image/png")
+    return HttpResponse(jpeg_data, content_type="image/jpeg")
+
+
+@login_required()
+@jsonp
+def imageData(request, conn=None, **kwargs):
+
+    iid = kwargs["iid"]
+    key = kwargs.get("key", None)
+    image = conn.getObject("Image", iid)
+
+    # We overwrite json_data so we don't get Tiled Viewer,
+    # since we currently only support render_image/ and not regions (tiles).
+    json_data = imageMarshal(image, key=key, request=request)
+    json_data["tiles"] = False
+    del json_data["zoomLevelScaling"]
+    del json_data["levels"]
+    del json_data["tile_size"]
+
+    return json_data
