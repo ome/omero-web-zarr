@@ -8,7 +8,7 @@ import requests
 from pathlib import Path
 
 
-def render_image_to_pil(url):
+def render_image_to_pil(url, image):
 
     # read the image data
     reader = Reader(parse_url(url))
@@ -21,16 +21,15 @@ def render_image_to_pil(url):
     # Use highest (full size) resolution of the pyramid
     dask_data = pyramid[0]
 
-    # rgb = np.dstack((red, green, blue))
-    RED = (1, 0, 0)
-    GREEN = (0, 1, 0)
-    BLUE = (0, 0, 1)
-    YELLOW = (1, 1, 0)
-    WHITE = (1, 1, 1)
+    active_channels = []
+    active_colors = []
+    active_windows = []
 
-    active_channels = [0, 1]
-    active_colors = [RED, GREEN]
-    active_windows = [[50, 4095], [50, 4095]]
+    for index, ch in enumerate(image.getChannels()):
+        if ch.isActive():
+            active_channels.append(index)
+            active_colors.append([val / 255 for val in ch.getColor().getRGB()])
+            active_windows.append([int(ch.getWindowStart()), int(ch.getWindowEnd())])
 
     rgb = setActiveChannels(dask_data, active_channels, active_colors, active_windows)
     img = Image.fromarray(rgb)
@@ -44,6 +43,7 @@ def display(image, display_min, display_max): # copied from Bi Rico
     np.floor_divide(image, (display_max - display_min + 1) / 256,
                     out=image, casting='unsafe')
     return image.astype(np.uint8)
+
 
 def render_plane(dask_data, z, c, t, window=None):
     # slice 5D -> 2D
@@ -73,7 +73,7 @@ def setActiveChannels(dask_data, active_indecies, colors, windows=None):
             rgb_plane = np.zeros((*plane.shape, 3), np.uint16)
         for index, fraction in enumerate(color):
             if fraction > 0:
-                rgb_plane[:, :, index] += (fraction * plane)
+                rgb_plane[:, :, index] += (fraction * plane).astype(rgb_plane.dtype)
 
     rgb_plane.clip(0, 255, out=rgb_plane)
     return rgb_plane.astype(np.uint8)

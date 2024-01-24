@@ -38,6 +38,7 @@ from omero.model.enums import PixelsTypeuint32, PixelsTypefloat
 from omero.model.enums import PixelsTypedouble
 from omeroweb.webclient.decorators import login_required
 from omeroweb.webgateway.marshal import channelMarshal
+from omeroweb.webgateway.views import _get_prepared_image
 from omero.sys import ParametersI
 from omero.rtypes import rstring
 
@@ -370,10 +371,13 @@ def render_image(request, iid, z=None, t=None, conn=None, **kwargs):
         row_col_field = f"/{row}/{column}/{ws_index}/"
         zarr_path += row_col_field
 
+    # load Image and apply any rendering settings from request. e.g. ?c=...
+    image, quality = _get_prepared_image(request, iid, conn=conn)
+
     # Render the image... NB - hard-coded rendering settings for testing!
-    image = render_image_to_pil(zarr_path)
+    pil_img = render_image_to_pil(zarr_path, image)
     output = BytesIO()
-    image.save(output, "jpeg")
+    pil_img.save(output, "jpeg")
     jpeg_data = output.getvalue()
     output.close()
     return HttpResponse(jpeg_data, content_type="image/png")
