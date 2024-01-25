@@ -1,0 +1,14 @@
+
+<html>
+
+    {% if s3_url %}
+    <a href="{{ s3_url }}">s3 URL</a>
+    <iframe name="vizarr" width="100%" height="90%" src="{{ VIZARR_URL }}?source={{ s3_url }}"></iframe>
+
+    {% else %}
+
+    No s3 URL available
+
+    {% endif %}
+
+</html>

@@ -40,12 +40,20 @@ urlpatterns = [
     # Delegate all /vizarr/ or /validator/ urls to statically-hosted files
     re_path(r'^(?P<app>vizarr|validator)/(?P<url>.*)$', views.apps, name='zarr_app'),  # noqa
 
-    # supports same rendering settings in query as webgateway/render_image
+    # -- ALL URLs below are designed to work with public s3-hosted OME-Zarr Plates/Images ---
+
+    # -- The following URLs support using /zarr/ as the Preview panel base-url, which means we need
+    # to support all the derived URLs used by the Preview panel viewer...
+    # zarr/render_image/ supports same rendering settings in query as webgateway/render_image
     re_path(r"^render_image/(?P<iid>[0-9]+)/(?:(?P<z>[0-9]+)/)?(?:(?P<t>[0-9]+)/)?$",
             views.render_image, name="zarr_render_image"),
     re_path(
         r"^(?:(?P<share_id>[0-9]+)/)?imgData/(?P<iid>[0-9]+)/$",
         views.imageData, name="web_imageData_json",
     ),
-    re_path(r"^getImgRDef/$", webgateway.get_image_rdef_json, name="zarr_get_image_rdef_json")
+    re_path(r"^getImgRDef/$", webgateway.get_image_rdef_json, name="zarr_get_image_rdef_json"),
+
+    # Alternative to the Preview is a right panel viewer that users vizarr for public s3 zarr
+    re_path(r"^s3_vizarr/(?P<c_type>(image|well))/(?P<c_id>[0-9]+)/$",
+            views.s3_vizarr, name="zarr_s3_vizarr"),
 ]

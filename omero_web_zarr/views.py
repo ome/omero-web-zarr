@@ -24,9 +24,9 @@ import json
 import requests
 from io import BytesIO
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.urls import reverse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 
 from .utils import marshal_axes, marshal_axes_v3
 from .utils import generate_coordinate_transformations
@@ -53,6 +53,8 @@ PIXEL_TYPES = {
     PixelsTypedouble: np.float64
 }
 
+VIZARR_URL = "https://hms-dbmi.github.io/vizarr/"
+
 
 @login_required()
 def index(request, conn=None, **kwargs):
@@ -62,8 +64,8 @@ def index(request, conn=None, **kwargs):
     home = request.build_absolute_uri(reverse("omero_web_zarr_index"))
     return HttpResponse(
         "To open an Image in Vizarr go to "
-        "https://hms-dbmi.github.io/vizarr/?source=%simage/[IMAGE_ID].zarr"
-        % home
+        "%s?source=%simage/[IMAGE_ID].zarr"
+        % (VIZARR_URL, home)
     )
 
 
@@ -300,7 +302,7 @@ def apps(request, app, url):
         return redirect(new_url + "?source=" + source)
 
     base_urls = {
-        "vizarr": "https://hms-dbmi.github.io/vizarr/",
+        "vizarr": VIZARR_URL,
         "validator": "https://ome.github.io/ome-ngff-validator/",
     }
     if app not in base_urls:
@@ -412,3 +414,40 @@ def imageData(request, conn=None, **kwargs):
     del json_data["tile_size"]
 
     return json_data
+
+
+@login_required()
+def vizarr_or_iviewer(request, iid=None, conn=None, **kwargs):
+
+    s3_url = get_zarr_s3_path(conn, iid)
+    print('vizarr_or_iviewer s3_url', s3_url)
+
+    if s3_url is not None:
+        url = f"https://hms-dbmi.github.io/vizarr/?source={s3_url}"
+        return HttpResponseRedirect(url)
+    
+    else:
+        from omero_iviewer.views import index as iviewer_index
+        return iviewer_index(request, iid, **kwargs)
+
+
+@login_required()
+def s3_vizarr(request, c_type, c_id, conn=None, **kwargs):
+
+    s3_url = None
+    img_id = None
+    if c_type == "well":
+        well = conn.getObject("Well", c_id)
+        image = well.getImage()
+        if image is not None:
+            img_id = image.id
+    elif c_type == "image":
+        img_id = c_id
+
+    if img_id is not None:
+        s3_url = get_zarr_s3_path(conn, img_id)
+
+    context = {"s3_url": s3_url, "VIZARR_URL": VIZARR_URL}
+
+    return render(request, "omero_web_zarr/s3_vizarr.html", context)
+ 

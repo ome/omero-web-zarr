@@ -1,0 +1,26 @@
+<script>
+    $(function() {
+
+       // omero config append omero.web.ui.right_plugins '["NGFF s3", "omero_web_zarr/right_panel_vizarr.html", "s3_vizarr"]'
+    
+       // Initialise the right tab plugin, on our specified tab element
+       $("#s3_vizarr").omeroweb_right_plugin({
+    
+           // Tab will only be enabled when a single image or well is selected
+           supported_obj_types: ['image', 'well'],
+    
+           // This will get called when tab is displayed or selected objects change
+           load_plugin_content: function(selected, obj_dtype, obj_id) {
+    
+               // since we only support single images, the obj_id will be an image ID
+               // Generate url based on a template-generated url
+               var url = `{% url 'omero_web_zarr_index' %}s3_vizarr/${obj_dtype}/${obj_id}/`;
+    
+               // Simply load the tab
+               $(this).load(url);
+           },
+    
+       });
+    
+    });
+    </script>
