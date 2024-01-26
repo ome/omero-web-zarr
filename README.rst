@@ -29,6 +29,7 @@ Install with::
     $ pip install -e .
 
 Configuration
+-------------
 
 ::
 
@@ -67,6 +68,28 @@ In the webclient UI you can use the context menu to `Open With > Vizarr`, or use
 
     [omero-server]/zarr/vizarr/?source=[omero-server]/zarr/v0.4/image/[ID].zarr
 
+Viewing s3 data
+---------------
+
+If you have imported OME-Zarr images into OMERO and the data is publicly accessible, e.g. hosted
+on s3, then you can use this app to view that s3 data directly (instead of using the OMERO server).
+This relies on the public data source being set as the `clientPath` location (shown in the webclient
+as "Imported From"). At least 1 `clientPath` for an Image or Plate should be in the form:
+`http....zarr/.zattrs`.
+For data that matches this criteria, we can replace the image-viewer with `vizarr`` (images that do not
+have such a clientPath will default to using iviewer):
+
+::
+
+    $ omero config set omero.web.viewer.view omero_web_zarr.views.vizarr_or_iviewer
+
+If you want to remove the Preview panel
+
+::
+
+    $ omero config set omero.web.ui.right_plugins '[["Acquisition", "webclient/data/includes/right_plugin.acquisition.js.html", "metadata_tab"]]'
+
+
 Testing
 -------
 
@@ -84,5 +107,5 @@ The application is released under the AGPL.
 Copyright
 ---------
 
-2022-2023, The Open Microscopy Environment
+2022-2024, The Open Microscopy Environment
 

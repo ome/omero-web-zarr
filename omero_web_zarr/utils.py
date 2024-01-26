@@ -17,6 +17,8 @@
 #
 
 from django.http import Http404
+from omero.sys import ParametersI
+from omero.rtypes import rstring
 
 
 def marshal_pixel_sizes(image):
@@ -96,3 +98,50 @@ def generate_coordinate_transformations(shapes):
             transformations.append([{"type": "scale", "scale": scale}])
 
         return transformations
+
+
+def get_zarr_s3_path(conn, image_id):
+    """
+    Check Fileset clientPaths for path ending zarr/.zattrs
+
+    If Image is in a Plate/Well, add eg. /A/1/0/ to path.
+    """
+    query_service = conn.getQueryService()
+    params = ParametersI()
+    params.addId(image_id)
+    params.add("zarr", rstring("%%%s" % "zarr/.zattrs"))
+    query = """ select u.clientPath from Fileset fs
+        join fs.usedFiles u
+        left outer join fs.images as image
+        where image.id=:id
+        and u.clientPath like :zarr"""
+
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    if len(result) == 0:
+        return None
+
+    # We also need clientPath to be a publicly-accessible URL
+    client_path = result[0][0].val
+    zarr_path = client_path.replace("/.zattrs", "")
+
+    # Check if Image is in a Well - need to add /row/col/field/ e.g. /A/1/0
+    query_service = conn.getQueryService()
+    wsparams = ParametersI()
+    wsparams.addId(image_id)
+    wsquery = """select well.plate.id, well.row, well.column, index(ws) from Well well
+        join well.wellSamples ws where ws.image.id=:id"""
+    ws = query_service.projection(wsquery, wsparams, conn.SERVICE_OPTS)
+    if len(ws) > 0:
+        plate_id = ws[0][0].val
+        plate = conn.getObject("Plate", plate_id)
+        row = plate.getRowLabels()[ws[0][1].val]
+        column = plate.getColumnLabels()[ws[0][2].val]
+        ws_index = ws[0][3].val
+        row_col_field = f"/{row}/{column}/{ws_index}/"
+        zarr_path += row_col_field
+    else:
+        # assumes bioformats2raw image!!
+        # TODO: need to handle this case - NOT true for all Images
+        zarr_path += "/0/"
+
+    return zarr_path
