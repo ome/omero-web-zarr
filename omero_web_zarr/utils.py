@@ -100,28 +100,33 @@ def generate_coordinate_transformations(shapes):
         return transformations
 
 
+def get_clientpath_by_endswith(conn, image_id, pathending):
+    query_service = conn.getQueryService()
+    params = ParametersI()
+    params.addId(image_id)
+    params.add("zarr", rstring("%%%s" % pathending))
+    query = """ select u.clientPath from Fileset fs
+        join fs.usedFiles u
+        left outer join fs.images as image
+        where image.id=:id
+        and u.clientPath like :zarr"""
+    result = query_service.projection(query, params, conn.SERVICE_OPTS)
+    if len(result) == 0:
+        return None
+    return result[0][0].val
+
+
 def get_zarr_s3_path(conn, image_id):
     """
     Check Fileset clientPaths for path ending zarr/.zattrs
 
     If Image is in a Plate/Well, add eg. /A/1/0/ to path.
     """
-    query_service = conn.getQueryService()
-    params = ParametersI()
-    params.addId(image_id)
-    params.add("zarr", rstring("%%%s" % "zarr/.zattrs"))
-    query = """ select u.clientPath from Fileset fs
-        join fs.usedFiles u
-        left outer join fs.images as image
-        where image.id=:id
-        and u.clientPath like :zarr"""
-
-    result = query_service.projection(query, params, conn.SERVICE_OPTS)
-    if len(result) == 0:
+    client_path = get_clientpath_by_endswith(conn, image_id, "zarr/.zattrs")
+    if client_path is None:
         return None
 
     # We also need clientPath to be a publicly-accessible URL
-    client_path = result[0][0].val
     zarr_path = client_path.replace("/.zattrs", "")
 
     # Check if Image is in a Well - need to add /row/col/field/ e.g. /A/1/0
@@ -140,8 +145,10 @@ def get_zarr_s3_path(conn, image_id):
         row_col_field = f"/{row}/{column}/{ws_index}/"
         zarr_path += row_col_field
     else:
-        # assumes bioformats2raw image!!
-        # TODO: need to handle this case - NOT true for all Images
-        zarr_path += "/0/"
+        # Check whether this is a bioformats2raw image
+        metadata_path = get_clientpath_by_endswith(conn, image_id,
+                                                   "OME/METADATA.ome.xml")
+        if metadata_path is not None:
+            zarr_path += "/0/"
 
     return zarr_path
