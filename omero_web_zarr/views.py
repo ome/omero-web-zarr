@@ -26,6 +26,7 @@ import requests
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.shortcuts import redirect
+from django.templatetags.static import static
 
 from .utils import marshal_axes, marshal_axes_v3, get_zarr_s3_path
 from .utils import generate_coordinate_transformations
@@ -319,8 +320,10 @@ def vizarr_or_iviewer(request, iid=None, conn=None, **kwargs):
 
     s3_url = get_zarr_s3_path(conn, iid)
 
+    local_vizarr_url = static("omero_web_zarr/vizarr/index.html")
+
     if s3_url is not None:
-        url = f"https://hms-dbmi.github.io/vizarr/?source={s3_url}"
+        url = f"{local_vizarr_url}?source={s3_url}"
         return redirect(url)
 
     else:
