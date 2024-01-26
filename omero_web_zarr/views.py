@@ -26,8 +26,9 @@ import requests
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.shortcuts import redirect
+from django.templatetags.static import static
 
-from .utils import marshal_axes, marshal_axes_v3
+from .utils import marshal_axes, marshal_axes_v3, get_zarr_s3_path
 from .utils import generate_coordinate_transformations
 
 from omero.model.enums import PixelsTypeint8, PixelsTypeuint8, PixelsTypeint16
@@ -312,3 +313,25 @@ def apps(request, app, url):
         rsp['content-type'] = "application/javascript"
 
     return rsp
+
+
+@login_required()
+def vizarr_or_iviewer(request, iid=None, conn=None, **kwargs):
+
+    s3_url = get_zarr_s3_path(conn, iid)
+
+    local_vizarr_url = static("omero_web_zarr/vizarr/index.html")
+
+    if s3_url is not None:
+        url = f"{local_vizarr_url}?source={s3_url}"
+        return redirect(url)
+
+    else:
+        try:
+            # Default to iviewer (if installed)...
+            from omero_iviewer.views import index as iviewer_index
+            return iviewer_index(request, iid, **kwargs)
+        except ImportError:
+            # ...otherwise revert to original image viewer
+            from omeroweb.webclient.views import image_viewer
+            return image_viewer(request, iid, **kwargs)
