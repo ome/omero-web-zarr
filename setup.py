@@ -69,25 +69,25 @@ setup(
     version=VERSION,
     description=DESCRIPTION,
     long_description=read('README.rst'),
-          classifiers=[
-          'Development Status :: 3 - Alpha',
-          'Environment :: Web Environment',
-          'Framework :: Django',
-          'Intended Audience :: End Users/Desktop',
-          'Intended Audience :: Science/Research',
-          'Natural Language :: English',
-          'Operating System :: OS Independent',
-          'Programming Language :: JavaScript',
-          'Programming Language :: Python :: 3',
-          'Topic :: Internet :: WWW/HTTP',
-          'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-          'Topic :: Internet :: WWW/HTTP :: WSGI',
-          'Topic :: Scientific/Engineering :: Visualization',
-          'Topic :: Software Development :: Libraries :: '
-          'Application Frameworks',
-          'Topic :: Text Processing :: Markup :: HTML'
-      ],  # Get strings from
-          # http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Environment :: Web Environment',
+        'Framework :: Django',
+        'Intended Audience :: End Users/Desktop',
+        'Intended Audience :: Science/Research',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: JavaScript',
+        'Programming Language :: Python :: 3',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+        'Topic :: Internet :: WWW/HTTP :: WSGI',
+        'Topic :: Scientific/Engineering :: Visualization',
+        'Topic :: Software Development :: Libraries :: '
+        'Application Frameworks',
+        'Topic :: Text Processing :: Markup :: HTML'
+    ],  # Get strings from
+    # http://pypi.python.org/pypi?%3Aaction=list_classifiers
     author=AUTHOR,
     author_email='ome-devel@lists.openmicroscopy.org.uk',
     license=LICENSE,

@@ -87,12 +87,12 @@ def marshal_axes(image, version):
 
 def generate_coordinate_transformations(shapes):
 
-        data_shape = shapes[0]
-        transformations = []
-        # calculate minimal 'scale' transform based on pyramid dims
-        for shape in shapes:
-            assert len(shape) == len(data_shape)
-            scale = [full / level for full, level in zip(data_shape, shape)]
-            transformations.append([{"type": "scale", "scale": scale}])
+    data_shape = shapes[0]
+    transformations = []
+    # calculate minimal 'scale' transform based on pyramid dims
+    for shape in shapes:
+        assert len(shape) == len(data_shape)
+        scale = [full / level for full, level in zip(data_shape, shape)]
+        transformations.append([{"type": "scale", "scale": scale}])
 
-        return transformations
+    return transformations
