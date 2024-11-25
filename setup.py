@@ -95,7 +95,7 @@ setup(
     download_url='%s/archive/v%s.tar.gz' % (HOMEPAGE, VERSION),  # NOQA
     packages=find_packages(),
     keywords=['omero', 'zarr', 'ome', 'web'],
-    install_requires=['zarr'],
+    install_requires=['zarr', 'ome_zarr'],
     include_package_data=True,
     zip_safe=False,
     cmdclass={'test': PyTest},
