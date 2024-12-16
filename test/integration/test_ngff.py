@@ -83,7 +83,7 @@ class TestNgff(IWebTest):
         kwargs = {"iid": image_id, "version": version}
         zattrs_url = reverse('zarr_image_zattrs', kwargs=kwargs)
         zattrs_json = get_json(django_client, zattrs_url)
-        assert(len(zattrs_json["multiscales"]) == 1)
+        assert len(zattrs_json["multiscales"]) == 1
 
         zgroup_url = reverse('zarr_image_zgroup', kwargs=kwargs)
         zgroup_json = get_json(django_client, zgroup_url)
